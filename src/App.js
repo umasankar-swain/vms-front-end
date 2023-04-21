@@ -1,13 +1,11 @@
 import './App.css';
-// import Booking from './components/Booking';
-import MyForm from './components/MyForm';
+import Booking from './components/Booking';
 
 function App() {
   return (
     <div className="App">
-      {/* <h1>VMS</h1> */}
       <img style={{width:"180px"}} src='/assets/icons/vms.png' alt=''/>
-      <MyForm/>
+      <Booking/>
       
     </div>
   );
