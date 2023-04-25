@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import axios from 'axios';
 import {
   TextField,
   Button,
   Stack,
   Box,
+  FormLabel,
   Typography,
   FormControl,
   RadioGroup,
@@ -16,7 +18,9 @@ import dayjs from 'dayjs';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-
+import { API_BASE_URL } from "../setting";
+import Lottie from "lottie-react";
+import Success from '../animations/Success.json';
 const validationSchema = Yup.object({
   firstName: Yup.string().required("FirstName is Required"),
   lastName: Yup.string().required("LastName is Required"),
@@ -30,6 +34,53 @@ const validationSchema = Yup.object({
 
 const Booking = () => {
   const [step, setStep] = useState(0);
+  const [carType, setCarType] = useState()
+  const [bikeType, setBikeType] = useState()
+  const [bikeModel, setBikeModel] = useState()
+  const [carModel, setCarModel] = useState()
+  const [loading, setLoading] = useState(false)
+
+  const getCars = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/vehicle-type/carTypes`);
+      setCarType(res.data);
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const getBikes = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/vehicle-type/bikeTypes`);
+      setBikeType(res.data);
+    } catch (e) {
+      console.error(e)
+    }
+  }
+  const getBikModels = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/vehicl-model/cars`);
+      setBikeModel(res.data);
+    } catch (e) {
+      console.error(e)
+    }
+  }
+  const getCarModels = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/vehicl-model/bikes`);
+      setCarModel(res.data);
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  useEffect(() => {
+    getBikModels();
+    getCarModels();
+    getCars();
+    getBikes();
+  }, [])
+
   const formik = useFormik({
     initialValues: {
       firstName: "",
@@ -38,11 +89,31 @@ const Booking = () => {
       vehicleType: "",
       vehicleModel: "",
       startDate: "",
-      endDate: ""
+      endDate: "",
     },
     validationSchema,
-    onSubmit: (values) => {
-      console.log(values);
+    onSubmit: async (values) => {
+      try {
+        const apiRes = await axios.post(`${API_BASE_URL}/bookings`,
+          {
+            firstName: values.firstName,
+            lastName: values.lastName,
+            numberOfWheels: values.numberOfWheels,
+            vehicleType: values.vehicleType,
+            vehicleModel: values.vehicleModel,
+            startDate: new Date(values.startDate).toISOString(),
+            endDate: new Date(values.endDate).toISOString(),
+          });
+        if (apiRes.status === 201) {
+          setLoading(true);
+        } else {
+          setLoading(false);
+          alert(apiRes?.data?.message)
+        }
+      } catch (err) {
+        setLoading(false);
+        alert('Something went wrong!, Please try again.')
+      }
     },
   });
 
@@ -164,22 +235,45 @@ const Booking = () => {
             <Stack direction={'column'} spacing={2}>
               <Box>
                 <FormControl component="fieldset">
-                  <RadioGroup
-                    aria-label="vehicleType"
-                    name="vehicleType"
-                    value={formik.values.vehicleType}
-                    onChange={formik.handleChange}
-                  >
-                    <FormControlLabel value="cars" control={<Radio />} label="Cars" />
-                    <FormControlLabel value="Bikes" control={<Radio />} label="Bikes" />
-                  </RadioGroup>
+                  {formik.values.numberOfWheels === "2" ? (
+                    <>
+                      <FormLabel id="demo-radio-buttons-group-label">Bikes</FormLabel>
+                      <RadioGroup
+                        aria-label="vehicleType"
+                        name="vehicleType"
+                        value={formik.values.vehicleType}
+                        onChange={formik.handleChange}
+                      >
+                        {bikeType?.map((type) => (
+                          <FormControlLabel key={type} value={type} control={<Radio />} label={type} />
+                        ))}
+                      </RadioGroup>
+                    </>
+                  ) : (
+                    <>
+                      <FormLabel id="demo-radio-buttons-group-label">Cars</FormLabel>
+                      <RadioGroup
+                        aria-label="vehicleType"
+                        name="vehicleType"
+                        value={formik.values.vehicleType}
+                        onChange={formik.handleChange}
+                      >
+                        {carType?.map((type) => (
+                          <FormControlLabel key={type} value={type} control={<Radio />} label={type} />
+                        ))}
+                      </RadioGroup>
+                    </>
+                  )}
                 </FormControl>
-                {formik.touched.vehicleType && formik.errors.vehicleType && <p style={{ color: 'red', marginTop: '5px', marginBottom: '-15px' }}>{formik.errors.vehicleType}</p>}
+                {formik.touched.vehicleType && formik.errors.vehicleType && (
+                  <p style={{ color: 'red', marginTop: '5px', marginBottom: '-15px' }}>{formik.errors.vehicleType}</p>
+                )}
               </Box>
             </Stack>
           </>
         )
       }
+
       {
         step === 3 && (
           <>
@@ -189,15 +283,35 @@ const Booking = () => {
 
             <Box>
               <FormControl component="fieldset">
-                <RadioGroup
-                  aria-label="vehicleModel"
-                  name="vehicleModel"
-                  value={formik.values.vehicleModel}
-                  onChange={formik.handleChange}
-                >
-                  <FormControlLabel value="Maruti suzuki swift" control={<Radio />} label="Maruti suzuki swift" />
-                  <FormControlLabel value="Honda xblade" control={<Radio />} label="Honda xblade" />
-                </RadioGroup>
+                {formik.values.numberOfWheels === "2" ? (
+                  <>
+                    <FormLabel id="demo-radio-buttons-group-label">Bikes</FormLabel>
+                    <RadioGroup
+                      aria-label="vehicleModel"
+                      name="vehicleModel"
+                      value={formik.values.vehicleModel}
+                      onChange={formik.handleChange}
+                    >
+                      {bikeModel?.vehicleModels?.map((item) => (
+                        <FormControlLabel key={item.modelName} value={item.modelName} control={<Radio />} label={item.modelName} />
+                      ))}
+                    </RadioGroup>
+                  </>
+                ) : (
+                  <>
+                    <FormLabel id="demo-radio-buttons-group-label">Cars</FormLabel>
+                    <RadioGroup
+                      aria-label="vehicleType"
+                      name="vehicleModel"
+                      value={formik.values.vehicleModel}
+                      onChange={formik.handleChange}
+                    >
+                      {carModel?.vehicleModels?.map((item) => (
+                        <FormControlLabel key={item.modelName} value={item.modelName} control={<Radio />} label={item.modelName} />
+                      ))}
+                    </RadioGroup>
+                  </>
+                )}
               </FormControl>
               {formik.touched.vehicleModel && formik.errors.vehicleModel && <p style={{ color: 'red', marginTop: '5px', marginBottom: '-15px' }}>{formik.errors.vehicleModel}</p>}
             </Box>
@@ -206,81 +320,90 @@ const Booking = () => {
       }
       {
         step === 4 && (
-          <>
-            <Typography variant="h4" align="center" gutterBottom>
-              Pick a date range?
-            </Typography>
+          loading ? (
+            <Box sx={{ bgcolor: 'white', mt: 3, textAlign: 'center' }}>
+              <Lottie style={{ height: '300px' }} loop animationData={Success} />
+              <Typography variant="h3">
+                Booking Received
+              </Typography>
+            </Box>
 
-            <Stack direction={'row'} sx={{ width: "100%" }} spacing={2} alignItems="center">
-              <Box 
-                sx={{
-                  width: '100%',
-                }}>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DesktopDatePicker
-                    label="Start Date"
-                    inputFormat="DD/MM/YYYY"
-                    value={formik.values?.startDate}
-                    onChange={(newValue) => {
-                      formik.setFieldValue(
-                        "startDate",
-                        newValue
-                      );
-                      formik.setFieldTouched("startDate", true);
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        sx={{
-                          width: "100%"
-                        }}
-                        {...params}
-                        name="startDate"
-                        onBlur={formik.handleBlur}
-                        error={formik.errors.startDate && formik.touched.startDate}
-                      />
-                    )}
-                  />
+          ) :
+            <>
+              <Typography variant="h4" align="center" gutterBottom>
+                Pick a date range?
+              </Typography>
 
-                </LocalizationProvider>
-                {formik.touched.startDate && formik.errors.startDate && <p style={{ color: 'red', marginTop: '5px', marginBottom: '-15px' }}>{formik.errors.startDate}</p>}
-              </Box>
-              <Typography>To</Typography>
-              <Box
-                sx={{
-                  width: '100%',
-                }}>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <Stack direction={'row'} sx={{ width: "100%" }} spacing={2} alignItems="center">
+                <Box
+                  sx={{
+                    width: '100%',
+                  }}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DesktopDatePicker
+                      label="Start Date"
+                      inputFormat="DD/MM/YYYY"
+                      value={formik.values?.startDate}
+                      onChange={(newValue) => {
+                        formik.setFieldValue(
+                          "startDate",
+                          newValue
+                        );
+                        formik.setFieldTouched("startDate", true);
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          sx={{
+                            width: "100%"
+                          }}
+                          {...params}
+                          name="startDate"
+                          onBlur={formik.handleBlur}
+                          error={formik.errors.startDate && formik.touched.startDate}
+                        />
+                      )}
+                    />
 
-                  <DesktopDatePicker
-                    label="End Date"
-                    inputFormat="DD/MM/YYYY"
-                    value={formik.values?.endDate}
-                    onChange={(newValue) => {
-                      formik.setFieldValue(
-                        "endDate",
-                        newValue
-                      );
-                      formik.setFieldTouched("endDate", true);
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        sx={{
-                          width: "100%"
-                        }}
-                        {...params}
-                        name="endDate"
-                        onBlur={formik.handleBlur}
-                        error={formik.errors.endDate && formik.touched.endDate}
-                      />
-                    )}
-                  />
+                  </LocalizationProvider>
+                  {formik.touched.startDate && formik.errors.startDate && <p style={{ color: 'red', marginTop: '5px', marginBottom: '-15px' }}>{formik.errors.startDate}</p>}
+                </Box>
+                <Typography>To</Typography>
+                <Box
+                  sx={{
+                    width: '100%',
+                  }}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
 
-                </LocalizationProvider>
-                {formik.touched.endDate && formik.errors.endDate && <p style={{ color: 'red', marginTop: '5px', marginBottom: '-15px' }}>{formik.errors.endDate}</p>}
-              </Box>
-            </Stack>
+                    <DesktopDatePicker
+                      label="End Date"
+                      inputFormat="DD/MM/YYYY"
+                      value={formik.values?.endDate}
+                      onChange={(newValue) => {
+                        formik.setFieldValue(
+                          "endDate",
+                          newValue
+                        );
+                        formik.setFieldTouched("endDate", true);
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          sx={{
+                            width: "100%"
+                          }}
+                          {...params}
+                          name="endDate"
+                          onBlur={formik.handleBlur}
+                          error={formik.errors.endDate && formik.touched.endDate}
+                        />
+                      )}
+                    />
 
-          </>
+                  </LocalizationProvider>
+                  {formik.touched.endDate && formik.errors.endDate && <p style={{ color: 'red', marginTop: '5px', marginBottom: '-15px' }}>{formik.errors.endDate}</p>}
+                </Box>
+              </Stack>
+
+            </>
         )
       }
       <Box width={'100%'} sx={{ display: "flex", justifyContent: "center", alignItems: "center", mt: 2 }}>
