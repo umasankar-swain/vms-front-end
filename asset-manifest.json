@@ -1,9 +1,9 @@
 {
   "files": {
-    "main.css": "/vehicle-booking-system-frontend/static/css/main.31d6cfe0.css",
-    "main.js": "/vehicle-booking-system-frontend/static/js/main.54000e42.js",
-    "index.html": "/vehicle-booking-system-frontend/index.html",
-    "main.54000e42.js.map": "/vehicle-booking-system-frontend/static/js/main.54000e42.js.map"
+    "main.css": "/vms-front-end/static/css/main.31d6cfe0.css",
+    "main.js": "/vms-front-end/static/js/main.54000e42.js",
+    "index.html": "/vms-front-end/index.html",
+    "main.54000e42.js.map": "/vms-front-end/static/js/main.54000e42.js.map"
   },
   "entrypoints": [
     "static/css/main.31d6cfe0.css",
