@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.css": "/vehicle-booking-system-frontend/static/css/main.31d6cfe0.css",
+    "main.js": "/vehicle-booking-system-frontend/static/js/main.54000e42.js",
+    "index.html": "/vehicle-booking-system-frontend/index.html",
+    "main.54000e42.js.map": "/vehicle-booking-system-frontend/static/js/main.54000e42.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.31d6cfe0.css",
+    "static/js/main.54000e42.js"
+  ]
+}
